@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import model.api.AuthException;
+import services.api.AuthException;
 
 @ControllerAdvice
 public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {

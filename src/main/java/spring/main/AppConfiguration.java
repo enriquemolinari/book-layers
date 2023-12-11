@@ -8,11 +8,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import jakarta.persistence.EntityManagerFactory;
-import model.Cinema;
-import model.api.CinemaSystem;
-import model.mail.TheBestEmailProvider;
-import model.payment.PleasePayPaymentProvider;
-import model.token.PasetoToken;
+import services.Cinema;
+import services.api.CinemaSystem;
+import services.mail.TheBestEmailProvider;
+import services.payment.PleasePayPaymentProvider;
+import services.token.PasetoToken;
 
 @Configuration
 public class AppConfiguration {

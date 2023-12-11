@@ -17,14 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import model.api.AuthException;
-import model.api.CinemaSystem;
-import model.api.DetailedShowInfo;
-import model.api.MovieInfo;
-import model.api.MovieShows;
-import model.api.Ticket;
-import model.api.UserMovieRate;
-import model.api.UserProfile;
+import services.api.AuthException;
+import services.api.CinemaSystem;
+import services.api.DetailedShowInfo;
+import services.api.MovieInfo;
+import services.api.MovieShows;
+import services.api.Ticket;
+import services.api.UserMovieRate;
+import services.api.UserProfile;
 
 @RestController
 public class CinemaSystemController {
@@ -86,7 +86,7 @@ public class CinemaSystemController {
 		return ResponseEntity
 				.ok(cinema.registerUser(request.name(), request.surname(),
 						request.email(),
-						request.userName(), request.password(),
+						request.username(), request.password(),
 						request.repeatPassword()));
 	}
 
@@ -99,6 +99,20 @@ public class CinemaSystemController {
 		});
 
 		return ResponseEntity.ok(profile);
+	}
+
+	@PostMapping("/users/changepassword")
+	public ResponseEntity<Void> changePassword(
+			@CookieValue(required = false) String token,
+			@RequestBody ChangePasswordRequest passBody) {
+
+		ifAuthenticatedDo(token, userId -> {
+			cinema.changePassword(userId, passBody.currentPassword(),
+					passBody.newPassword1(), passBody.newPassword2());
+			return null;
+		});
+
+		return ResponseEntity.ok().build();
 	}
 
 	@GetMapping("/movies/{id}/rate")

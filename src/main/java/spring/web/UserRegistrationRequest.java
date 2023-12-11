@@ -1,6 +1,6 @@
 package spring.web;
 
 public record UserRegistrationRequest(String name, String surname, String email,
-		String userName,
+		String username,
 		String password, String repeatPassword) {
 }

@@ -6,16 +6,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import data.entities.Actor;
+import data.entities.Movie;
+import data.entities.Person;
+import data.entities.ShowTime;
+import data.entities.Theater;
+import data.entities.User;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import model.Actor;
-import model.Movie;
-import model.Person;
-import model.ShowTime;
-import model.Theater;
-import model.User;
-import model.api.DateTimeProvider;
-import model.api.Genre;
+import services.api.DateTimeProvider;
+import services.api.Genre;
 
 public class SetUpDb {
 
@@ -82,10 +82,19 @@ public class SetUpDb {
 			em.persist(nu);
 			em.persist(lu);
 
+			// schoolMovie.set
+			// TODO: need to remove this method...
 			schoolMovie.rateBy(eu, 5, "Great Movie");
 			schoolMovie.rateBy(nu, 5,
 					"Fantastic! The actors, the music, everything is fantastic!");
 			schoolMovie.rateBy(lu, 4, "I really enjoy the movie");
+
+			// new CinemaDataService(em, 10).rateBy(eu, schoolMovie, 5, 5,
+			// "Great Movie");
+			// new CinemaDataService(em, 10).rateBy(nu, schoolMovie, 10, 5,
+			// "Fantastic! The actors, the music, everything is fantastic!");
+			// new CinemaDataService(em, 10).rateBy(lu, schoolMovie, 14, 4,
+			// "I really enjoy the movie");
 
 			em.persist(schoolMovie);
 
