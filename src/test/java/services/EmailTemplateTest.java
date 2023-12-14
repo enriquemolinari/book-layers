@@ -6,8 +6,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import services.NewSaleEmailTemplate;
-
 public class EmailTemplateTest {
 
 	@Test

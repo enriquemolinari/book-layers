@@ -20,15 +20,6 @@ class Rating {
 		return new Rating();
 	}
 
-	public void calculaNewRate(int newUserRate) {
-		this.rateValue = Math
-				.round(((this.totalValue + newUserRate) / (totalUserVotes + 1))
-						* 100.0f)
-				/ 100.0f;
-		this.totalValue += newUserRate;
-		this.totalUserVotes++;
-	}
-
 	String actualRateAsString() {
 		return String.valueOf(this.rateValue);
 	}

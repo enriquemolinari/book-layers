@@ -10,13 +10,11 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import services.api.DateTimeProvider;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -32,30 +30,22 @@ public class Theater {
 	private long id;
 	@Column(unique = true)
 	private String name;
-	@Transient
-	// This allows testing
-	private DateTimeProvider provider = DateTimeProvider.create();
 
 	@ElementCollection(fetch = FetchType.LAZY)
 	private Set<Integer> seatNumbers;
 
-	public Theater(String name, Set<Integer> seats, DateTimeProvider provider) {
+	public Theater(String name, Set<Integer> seats) {
 		this.name = new NotBlankString(name, NAME_INVALID).value();
 		this.seatNumbers = seats;
-		this.provider = provider;
-	}
-
-	public Theater(String name, Set<Integer> seats) {
-		this(name, seats, DateTimeProvider.create());
 	}
 
 	Set<ShowSeat> seatsForShow(ShowTime show) {
 		return this.seatNumbers.stream()
-				.map(s -> new ShowSeat(show, s, this.provider))
+				.map(s -> new ShowSeat(show, s))
 				.collect(Collectors.toUnmodifiableSet());
 	}
 
-	String name() {
+	public String name() {
 		return name;
 	}
 

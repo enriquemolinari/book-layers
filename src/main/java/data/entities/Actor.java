@@ -18,7 +18,6 @@ import lombok.Setter;
 @Getter(value = AccessLevel.PRIVATE)
 public class Actor {
 
-	static final String NAME_INVALID = "name must not be blank";
 	static final String CHARACTER_NAME_INVALID = "character name must not be blank";
 
 	@Id
@@ -43,11 +42,11 @@ public class Actor {
 		return this.characterName.equals(aCharacterName);
 	}
 
-	String fullName() {
+	public String fullName() {
 		return this.person.fullName();
 	}
 
-	String characterName() {
+	public String characterName() {
 		return this.characterName;
 	}
 }

@@ -14,33 +14,18 @@ import org.junit.jupiter.api.Test;
 import data.entities.ShowTime;
 import data.entities.Theater;
 import data.services.DataException;
-import services.api.DateTimeProvider;
 
 public class ShowTimeTest {
 
 	private final ForTests tests = new ForTests();
 
 	@Test
-	public void showTimeStartTimeMustBeInTheFuture() {
-		Exception e = assertThrows(DataException.class, () -> {
-			new ShowTime(DateTimeProvider.create(),
-					tests.createSmallFishMovie(),
-					LocalDateTime.of(2023, 03, 10, 15, 0, 0, 0), 10f,
-					new Theater("A Theater", Set.of(1),
-							DateTimeProvider.create()));
-		});
-
-		assertEquals(e.getMessage(), ShowTime.START_TIME_MUST_BE_IN_THE_FUTURE);
-	}
-
-	@Test
 	public void showTimeStartTimeMustBeAfterMovieReleaseDate() {
 		Exception e = assertThrows(DataException.class, () -> {
-			new ShowTime(DateTimeProvider.create(),
+			new ShowTime(
 					tests.createSmallFishMovie(LocalDate.now().plusDays(20)),
 					LocalDateTime.now().plusMinutes(10), 10f,
-					new Theater("A Theater", Set.of(1),
-							DateTimeProvider.create()));
+					new Theater("A Theater", Set.of(1)));
 		});
 
 		assertEquals(e.getMessage(),
@@ -50,10 +35,9 @@ public class ShowTimeTest {
 	@Test
 	public void showTimePriceMustNotBeFree() {
 		Exception e = assertThrows(DataException.class, () -> {
-			new ShowTime(DateTimeProvider.create(),
-					tests.createSmallFishMovie(),
+			new ShowTime(tests.createSmallFishMovie(),
 					LocalDateTime.now().plusDays(1), 0f, new Theater(
-							"A Theater", Set.of(1), DateTimeProvider.create()));
+							"A Theater", Set.of(1)));
 		});
 
 		assertEquals(e.getMessage(), ShowTime.PRICE_MUST_BE_POSITIVE);

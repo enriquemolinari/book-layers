@@ -3,6 +3,7 @@ package data.entities;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,8 +27,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import services.api.ActorInMovieName;
-import services.api.Genre;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -155,15 +154,6 @@ public class Movie {
 		return this.rating.totalValue();
 	}
 
-	// TODO: DELETE THIS but needs rewrite the setUp
-	public UserRate rateBy(User user, int value, String comment) {
-		var userRate = new UserRate(user, value, comment, this,
-				LocalDateTime.now());
-		this.rating.calculaNewRate(value);
-		this.userRates.add(userRate);
-		return userRate;
-	}
-
 	public void setRateValue(float newMovieRateValue) {
 		this.rating.setValue(newMovieRateValue);
 	}
@@ -202,13 +192,6 @@ public class Movie {
 		return directors.stream().map(d -> d.fullName()).toList();
 	}
 
-	public List<ActorInMovieName> toActorsInMovieNames() {
-		return this.actors.stream()
-				.map(actor -> new ActorInMovieName(actor.fullName(),
-						actor.characterName()))
-				.toList();
-	}
-
 	public Set<String> genreAsListOfString() {
 		return this.genres.stream().map(g -> capitalizeFirstLetter(g.name()))
 				.collect(Collectors.toSet());
@@ -241,5 +224,9 @@ public class Movie {
 
 	public String plot() {
 		return this.plot;
+	}
+
+	public List<Actor> actors() {
+		return Collections.unmodifiableList(this.actors);
 	}
 }

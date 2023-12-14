@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import data.entities.Actor;
+import data.entities.Genre;
 import data.entities.Movie;
 import data.entities.Person;
 import data.entities.ShowTime;
@@ -14,8 +15,6 @@ import data.entities.Theater;
 import data.entities.User;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import services.api.DateTimeProvider;
-import services.api.Genre;
 
 public class SetUpDb {
 
@@ -82,19 +81,15 @@ public class SetUpDb {
 			em.persist(nu);
 			em.persist(lu);
 
-			// schoolMovie.set
-			// TODO: need to remove this method...
-			schoolMovie.rateBy(eu, 5, "Great Movie");
-			schoolMovie.rateBy(nu, 5,
-					"Fantastic! The actors, the music, everything is fantastic!");
-			schoolMovie.rateBy(lu, 4, "I really enjoy the movie");
-
-			// new CinemaDataService(em, 10).rateBy(eu, schoolMovie, 5, 5,
-			// "Great Movie");
-			// new CinemaDataService(em, 10).rateBy(nu, schoolMovie, 10, 5,
-			// "Fantastic! The actors, the music, everything is fantastic!");
-			// new CinemaDataService(em, 10).rateBy(lu, schoolMovie, 14, 4,
-			// "I really enjoy the movie");
+			schoolMovie.setRateValue(4.67f);
+			schoolMovie.addUserRate(eu, 5,
+					"Great Movie", LocalDateTime.now());
+			schoolMovie.addUserRate(nu, 5,
+					"Fantastic! The actors, the music, everything is fantastic!",
+					LocalDateTime.now());
+			schoolMovie.addUserRate(lu, 4,
+					"I really enjoy the movie",
+					LocalDateTime.now());
 
 			em.persist(schoolMovie);
 
@@ -105,7 +100,9 @@ public class SetUpDb {
 					List.of(jakeActor2, ernestActor, nervanActor),
 					List.of(andreDirector));
 
-			fishMovie.rateBy(eu, 4, "Fantastic !!");
+			fishMovie.setRateValue(4);
+			fishMovie.addUserRate(eu, 4,
+					"Fantastic !!", LocalDateTime.now());
 
 			em.persist(fishMovie);
 
@@ -131,7 +128,7 @@ public class SetUpDb {
 				seatsA.add(i);
 			}
 
-			var ta = new Theater("Theatre A", seatsA, null);
+			var ta = new Theater("Theatre A", seatsA);
 
 			em.persist(ta);
 			em.flush();
@@ -142,33 +139,33 @@ public class SetUpDb {
 				seatsB.add(i);
 			}
 
-			var tb = new Theater("Theatre B", seatsB, null);
+			var tb = new Theater("Theatre B", seatsB);
 
 			em.persist(tb);
 			em.flush();
 
-			var show1 = new ShowTime(DateTimeProvider.create(), fishMovie,
+			var show1 = new ShowTime(fishMovie,
 					LocalDateTime.now().plusDays(1), 10f, ta);
 			em.persist(show1);
 
-			var show2 = new ShowTime(DateTimeProvider.create(), fishMovie,
+			var show2 = new ShowTime(fishMovie,
 					LocalDateTime.now().plusDays(1).plusHours(4), 10f, ta);
 			em.persist(show2);
 
-			var show3 = new ShowTime(DateTimeProvider.create(), schoolMovie,
+			var show3 = new ShowTime(schoolMovie,
 					LocalDateTime.now().plusDays(2).plusHours(1), 19f, tb);
 
 			em.persist(show3);
 
-			var show4 = new ShowTime(DateTimeProvider.create(), schoolMovie,
+			var show4 = new ShowTime(schoolMovie,
 					LocalDateTime.now().plusDays(2).plusHours(5), 19f, tb);
 			em.persist(show4);
 
-			var show5 = new ShowTime(DateTimeProvider.create(), teaMovie,
+			var show5 = new ShowTime(teaMovie,
 					LocalDateTime.now().plusDays(2).plusHours(2), 19f, ta);
 			em.persist(show5);
 
-			var show6 = new ShowTime(DateTimeProvider.create(), runningMovie,
+			var show6 = new ShowTime(runningMovie,
 					LocalDateTime.now().plusHours(2), 19f, tb);
 			em.persist(show6);
 

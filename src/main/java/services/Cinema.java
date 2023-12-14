@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import data.entities.Genre;
 import data.entities.Movie;
 import data.entities.Person;
 import data.entities.Sale;
@@ -18,16 +19,18 @@ import data.entities.ShowTime;
 import data.entities.Theater;
 import data.entities.User;
 import data.services.CinemaRepository;
+import data.services.DataException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
+import services.api.ActorInMovieName;
+import services.api.AuthException;
 import services.api.BusinessException;
 import services.api.CinemaSystem;
 import services.api.CreditCardPaymentProvider;
 import services.api.DateTimeProvider;
 import services.api.DetailedShowInfo;
 import services.api.EmailProvider;
-import services.api.Genre;
 import services.api.MovieInfo;
 import services.api.MovieShows;
 import services.api.Seat;
@@ -38,6 +41,8 @@ import services.api.UserMovieRate;
 import services.api.UserProfile;
 
 public class Cinema implements CinemaSystem {
+
+	static final String START_TIME_MUST_BE_IN_THE_FUTURE = "The show start time must be in the future";
 	static final String USER_NAME_ALREADY_EXISTS = "userName already exists";
 	private static final int NUMBER_OF_RETRIES = 2;
 	static final String CREDIT_CARD_DEBIT_HAS_FAILED = "Credit card debit have failed";
@@ -123,10 +128,15 @@ public class Cinema implements CinemaSystem {
 	// DONE
 	@Override
 	public MovieInfo addNewMovie(String name, int duration,
-			LocalDate releaseDate, String plot, Set<Genre> genres) {
+			LocalDate releaseDate, String plot, Set<String> genres) {
 		return inTx(em -> {
 			var dataRepository = new CinemaRepository(em, this.pageSize);
-			var movie = new Movie(name, plot, duration, releaseDate, genres);
+
+			var enumGenres = genres.stream().map(g -> Genre.valueOf(g))
+					.collect(Collectors.toUnmodifiableSet());
+
+			var movie = new Movie(name, plot, duration, releaseDate,
+					enumGenres);
 			dataRepository.save(movie);
 			return convertMovieToMovieInfo(movie);
 		});
@@ -176,6 +186,11 @@ public class Cinema implements CinemaSystem {
 	public ShowInfo addNewShowFor(Long movieId, LocalDateTime startTime,
 			float price, Long theaterId, int pointsToWin) {
 		return inTx(em -> {
+
+			if (startTime.isBefore(this.dateTimeProvider.now())) {
+				throw new BusinessException(START_TIME_MUST_BE_IN_THE_FUTURE);
+			}
+
 			var dataRepository = new CinemaRepository(em, this.pageSize);
 			var movie = dataRepository.movieBy(movieId);
 			var theatre = dataRepository.theatreBy(theaterId);
@@ -258,8 +273,13 @@ public class Cinema implements CinemaSystem {
 	private Set<ShowSeat> filterSelectedSeats(ShowTime showTime,
 			Set<Integer> selectedSeats) {
 		return showTime.seatsForThisShow().stream()
-				.filter(seat -> seat.isIncludedIn(selectedSeats))
+				.filter(seat -> isIncludedIn(seat.seatNumber(), selectedSeats))
 				.collect(Collectors.toUnmodifiableSet());
+	}
+
+	private boolean isIncludedIn(int seatNumber, Set<Integer> selectedSeats) {
+		return selectedSeats.stream()
+				.anyMatch(ss -> ss.equals(seatNumber));
 	}
 
 	private void checkAllSelectedSeatsAreAvailable(Set<ShowSeat> selection) {
@@ -297,17 +317,25 @@ public class Cinema implements CinemaSystem {
 			var sale = new Sale(totalAmount, user, showTime,
 					showTime.pointsToEarn(), selectedSeats);
 
-			return sale.ticket();
+			return new Ticket(sale.total(), sale.pointsWon(),
+					new FormattedDateTime(sale.salesDate()).toString(),
+					sale.purchaserUserName(), sale.confirmedSeatNumbers(),
+					sale.movieName(),
+					new FormattedDayTime(sale.showStartTime()).toString());
 		});
 	}
 
 	@Override
 	public String login(String username, String password) {
 		return inTx(em -> {
-			var user = new CinemaRepository(em, this.pageSize).login(
-					username, password,
-					this.dateTimeProvider.now());
-			return token.tokenFrom(user.toMap());
+			try {
+				var user = new CinemaRepository(em, this.pageSize).login(
+						username, password,
+						this.dateTimeProvider.now());
+				return token.tokenFrom(user.toMap());
+			} catch (DataException e) {
+				throw new AuthException(e.getMessage(), e);
+			}
 		});
 	}
 
@@ -384,7 +412,7 @@ public class Cinema implements CinemaSystem {
 			ShowTime showTime, User user, float totalAmount) {
 		var emailTemplate = new NewSaleEmailTemplate(totalAmount,
 				user.userName(), selectedSeats, showTime.movieName(),
-				showTime.startDateTime());
+				new FormattedDayTime(showTime.startDateTime()).toString());
 
 		this.emailProvider.send(user.email(), emailTemplate.subject(),
 				emailTemplate.body());
@@ -456,7 +484,7 @@ public class Cinema implements CinemaSystem {
 		return new ShowInfo(show.id(), show.movieName(),
 				new MovieDurationFormat(show.movieDuration())
 						.toString(),
-				show.startDateTime(),
+				new FormattedDayTime(show.startDateTime()).toString(),
 				show.price());
 	}
 
@@ -483,7 +511,8 @@ public class Cinema implements CinemaSystem {
 				m.genreAsListOfString(), m.directorsNamesAsString(),
 				new FormattedDate(m.releaseDate()).toString(),
 				m.ratingValueAsString(), m.totalVotes(),
-				m.toActorsInMovieNames());
+				m.actors().stream().map(a -> new ActorInMovieName(a.fullName(),
+						a.characterName())).toList());
 	}
 
 	private void checkPageNumberIsGreaterThanZero(int pageNumber) {

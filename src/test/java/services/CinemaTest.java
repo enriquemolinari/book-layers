@@ -53,6 +53,23 @@ public class CinemaTest {
 	}
 
 	@Test
+	public void showStartTimeMustBeInTheFuture() {
+		var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
+				tests.doNothingEmailProvider(), tests.doNothingToken());
+
+		var movieInfo = tests.createSuperMovie(cinema);
+		long theaterId = createATheater(cinema);
+
+		var e = assertThrows(BusinessException.class, () -> {
+			cinema.addNewShowFor(movieInfo.id(),
+					LocalDateTime.now().minusDays(1),
+					10f, theaterId, 20);
+		});
+
+		assertEquals(Cinema.START_TIME_MUST_BE_IN_THE_FUTURE, e.getMessage());
+	}
+
+	@Test
 	public void aShowIsPlayingAt() {
 		var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
 				tests.doNothingEmailProvider(), tests.doNothingToken());

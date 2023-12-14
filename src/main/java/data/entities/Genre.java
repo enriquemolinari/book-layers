@@ -1,4 +1,4 @@
-package services.api;
+package data.entities;
 
 public enum Genre {
 

@@ -2,14 +2,11 @@ package architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 
-@Disabled
-// TODO: enable
 public class VerifyArchitectureTest {
 
 	@Test
@@ -34,8 +31,7 @@ public class VerifyArchitectureTest {
 		classes().that().resideInAPackage("services").should()
 				.onlyDependOnClassesThat()
 				.resideInAnyPackage("services.api", "services", "java..",
-						"javax..",
-						"data..")
+						"javax..", "jakarta..", "data..")
 				.check(importedClasses);
 	}
 

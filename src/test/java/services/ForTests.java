@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import data.entities.Actor;
+import data.entities.Genre;
 import data.entities.Movie;
 import data.entities.Person;
 import data.entities.ShowTime;
@@ -20,7 +21,6 @@ import services.api.ActorInMovieName;
 import services.api.CreditCardPaymentProvider;
 import services.api.DateTimeProvider;
 import services.api.EmailProvider;
-import services.api.Genre;
 import services.api.MovieInfo;
 import services.api.Token;
 
@@ -68,10 +68,9 @@ public class ForTests {
 
 	ShowTime createShowTime(CreditCardPaymentProvider gProvider,
 			EmailProvider eProvider, int pointsToWin) {
-		return new ShowTime(
-				DateTimeProvider.create(), this.createSmallFishMovie(),
+		return new ShowTime(this.createSmallFishMovie(),
 				LocalDateTime.now().plusDays(2), 10f, new Theater("a Theater",
-						Set.of(1, 2, 3, 4, 5, 6), DateTimeProvider.create()),
+						Set.of(1, 2, 3, 4, 5, 6)),
 				pointsToWin);
 	}
 
@@ -126,9 +125,9 @@ public class ForTests {
 	}
 
 	ShowTime createShowForSmallFish(DateTimeProvider provider) {
-		return new ShowTime(DateTimeProvider.create(), createSmallFishMovie(),
+		return new ShowTime(createSmallFishMovie(),
 				LocalDateTime.now().plusDays(1), 10f,
-				new Theater("a Theater", Set.of(1, 2, 3, 4, 5, 6), provider));
+				new Theater("a Theater", Set.of(1, 2, 3, 4, 5, 6)));
 	}
 
 	ShowTime createShowForSmallFish() {
@@ -155,7 +154,7 @@ public class ForTests {
 		var movieInfo = cinema.addNewMovie(SUPER_MOVIE_NAME, 109,
 				LocalDate.of(2023, 04, 05),
 				SUPER_MOVIE_PLOT,
-				Set.of(Genre.ACTION, Genre.ADVENTURE));
+				Set.of("ACTION", "ADVENTURE"));
 
 		cinema.addActorTo(movieInfo.id(), "Carlos", "Kalchi",
 				"carlosk@bla.com", "aCharacterName");
@@ -173,7 +172,7 @@ public class ForTests {
 		var movieInfo = cinema.addNewMovie(OTHER_SUPER_MOVIE_NAME, 80,
 				LocalDate.of(2022, 04, 05),
 				"other super movie ...",
-				Set.of(Genre.COMEDY, Genre.FANTASY));
+				Set.of("COMEDY", "FANTASY"));
 
 		cinema.addActorTo(movieInfo.id(), "Nico", "Cochix",
 				"nico@bla.com", "super Character Name");

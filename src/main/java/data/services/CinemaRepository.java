@@ -12,15 +12,15 @@ import data.entities.UserRate;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;
-import services.api.AuthException;
 
 public class CinemaRepository {
 
-	private EntityManager em;
 	static final String SHOW_TIME_ID_NOT_EXISTS = "Show ID not found";
 	static final String MOVIE_ID_DOES_NOT_EXISTS = "Movie ID not found";
 	static final String USER_ID_NOT_EXISTS = "User not registered";
 	public static final String USER_OR_PASSWORD_ERROR = "Invalid username or password";
+
+	private EntityManager em;
 	private int pageSize;
 
 	public CinemaRepository(EntityManager em, int pageSize) {
@@ -37,7 +37,7 @@ public class CinemaRepository {
 		q.setParameter(2, password);
 		var mightBeAUser = q.getResultList();
 		if (mightBeAUser.size() == 0) {
-			throw new AuthException(USER_OR_PASSWORD_ERROR);
+			throw new DataException(USER_OR_PASSWORD_ERROR);
 		}
 		var user = mightBeAUser.get(0);
 		em.persist(new LoginAudit(loginTime, user));

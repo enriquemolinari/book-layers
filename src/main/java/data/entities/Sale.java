@@ -15,8 +15,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import services.FormattedDateTime;
-import services.api.Ticket;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -58,21 +56,35 @@ public class Sale {
 		return this.total == aTotal;
 	}
 
-	private String formattedSalesDate() {
-		return new FormattedDateTime(salesDate).toString();
-	}
-
 	boolean purchaseBy(User aUser) {
 		return this.purchaser.equals(aUser);
 	}
 
-	List<Integer> confirmedSeatNumbers() {
+	public List<Integer> confirmedSeatNumbers() {
 		return this.selectedSeats.stream().toList();
 	}
 
-	public Ticket ticket() {
-		return new Ticket(total, pointsWon, formattedSalesDate(),
-				purchaser.userName(), confirmedSeatNumbers(),
-				soldShow.movieName(), soldShow.startDateTime());
+	public float total() {
+		return this.total;
+	}
+
+	public int pointsWon() {
+		return this.pointsWon;
+	}
+
+	public LocalDateTime salesDate() {
+		return this.salesDate;
+	}
+
+	public String purchaserUserName() {
+		return this.purchaser.userName();
+	}
+
+	public String movieName() {
+		return this.soldShow.movieName();
+	}
+
+	public LocalDateTime showStartTime() {
+		return this.soldShow.startDateTime();
 	}
 }

@@ -21,7 +21,7 @@ public interface CinemaSystem {
 	DetailedShowInfo show(Long id);
 
 	MovieInfo addNewMovie(String name, int duration,
-			LocalDate releaseDate, String plot, Set<Genre> genres);
+			LocalDate releaseDate, String plot, Set<String> genres);
 
 	MovieInfo addActorTo(Long movieId, String name, String surname,
 			String email, String characterName);
