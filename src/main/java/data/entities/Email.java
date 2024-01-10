@@ -13,20 +13,18 @@ import lombok.Setter;
 @Getter(value = AccessLevel.PRIVATE)
 public class Email {
 
-	private String email;
-	public static final String NOT_VALID_EMAIL = "Email address is not valid";
-	private static final String REGEX = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
+    private String email;
+    public static final String NOT_VALID_EMAIL = "Email address is not valid";
+    private static final String REGEX = "^[\\w-_.+]*[\\w-_.]@(\\w+\\.)+\\w+\\w$";
 
-	public Email(String email) {
-		if (!email.matches(REGEX)) {
-			throw new DataException(NOT_VALID_EMAIL);
-		}
+    public Email(String email) {
+        if (!email.matches(REGEX)) {
+            throw new DataException(NOT_VALID_EMAIL);
+        }
+        this.email = email;
+    }
 
-		this.email = email;
-	}
-
-	public String asString() {
-		return email;
-	}
-
+    public String asString() {
+        return email;
+    }
 }

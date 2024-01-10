@@ -12,45 +12,37 @@ import lombok.Setter;
 @Getter(value = AccessLevel.PRIVATE)
 class Rating {
 
-	private int totalUserVotes = 0;
-	private float rateValue = 0;
-	private float totalValue = 0;
+    private int totalUserVotes = 0;
+    private float rateValue = 0;
+    private float totalValue = 0;
 
-	public static Rating notRatedYet() {
-		return new Rating();
-	}
+    public static Rating notRatedYet() {
+        return new Rating();
+    }
 
-	String actualRateAsString() {
-		return String.valueOf(this.rateValue);
-	}
+    float actualRate() {
+        return this.rateValue;
+    }
 
-	float actualRate() {
-		return this.rateValue;
-	}
+    boolean hasValue(float aValue) {
+        return this.rateValue == aValue;
+    }
 
-	boolean hasValue(float aValue) {
-		return this.rateValue == aValue;
-	}
+    int totalVotes() {
+        return this.totalUserVotes;
+    }
 
-	public boolean hastTotalVotesOf(int votes) {
-		return this.totalUserVotes == votes;
-	}
+    float totalValue() {
+        return this.totalValue;
+    }
 
-	int totalVotes() {
-		return this.totalUserVotes;
-	}
+    public void setValue(float newMovieValue) {
+        this.rateValue = newMovieValue;
+    }
 
-	float totalValue() {
-		return this.totalValue;
-	}
-
-	public void setValue(float newMovieValue) {
-		this.rateValue = newMovieValue;
-	}
-
-	public void addTotalValue(int userValue) {
-		this.totalValue += userValue;
-		this.totalUserVotes += 1;
-	}
+    public void addTotalValue(int userValue) {
+        this.totalValue += userValue;
+        this.totalUserVotes += 1;
+    }
 
 }

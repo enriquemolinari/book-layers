@@ -1,19 +1,12 @@
 package data.entities;
 
-import java.time.LocalDateTime;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,84 +14,78 @@ import lombok.Setter;
 @Getter(value = AccessLevel.PRIVATE)
 public class ShowSeat {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	private User user;
-	private boolean reserved;
-	private boolean confirmed;
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "id_show")
-	private ShowTime show;
-	private LocalDateTime reservedUntil;
-	private Integer seatNumber;
-	@Version
-	private int version;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User user;
+    private boolean reserved;
+    @Getter
+    private boolean confirmed;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_show")
+    private ShowTime show;
+    private LocalDateTime reservedUntil;
+    private Integer seatNumber;
+    @Version
+    private int version;
 
-	public ShowSeat(ShowTime s, Integer seatNumber) {
-		this.show = s;
-		this.seatNumber = seatNumber;
+    public ShowSeat(ShowTime s, Integer seatNumber) {
+        this.show = s;
+        this.seatNumber = seatNumber;
+        this.reserved = false;
+        this.confirmed = false;
+    }
 
-		this.reserved = false;
-		this.confirmed = false;
-	}
+    public boolean isBusy() {
+        return !isAvailable();
+    }
 
-	public boolean isBusy() {
-		return !isAvailable();
-	}
+    public boolean isAvailable() {
+        return (!reserved || LocalDateTime.now().isAfter(this.reservedUntil)) && !confirmed;
+    }
 
-	public boolean isAvailable() {
-		return (!reserved || (reserved
-				&& LocalDateTime.now().isAfter(this.reservedUntil)))
-				&& !confirmed;
-	}
+    public boolean isConfirmedBy(User user) {
+        if (this.user == null) {
+            return false;
+        }
+        return confirmed && this.user.equals(user);
+    }
 
-	public boolean isConfirmedBy(User user) {
-		if (this.user == null) {
-			return false;
-		}
-		return confirmed && this.user.equals(user);
-	}
+    public boolean isReservedBy(User user) {
+        if (this.user == null) {
+            return false;
+        }
+        return reserved && this.user.equals(user)
+                && LocalDateTime.now().isBefore(this.reservedUntil);
+    }
 
-	public boolean isReservedBy(User user) {
-		if (this.user == null) {
-			return false;
-		}
-		return reserved && this.user.equals(user)
-				&& LocalDateTime.now().isBefore(this.reservedUntil);
-	}
+    public boolean isSeatNumbered(int aSeatNumber) {
+        return this.seatNumber.equals(aSeatNumber);
+    }
 
-	public boolean isSeatNumbered(int aSeatNumber) {
-		return this.seatNumber.equals(aSeatNumber);
-	}
+    public int seatNumber() {
+        return seatNumber;
+    }
 
-	public int seatNumber() {
-		return seatNumber;
-	}
+    public void reservedBy(User user) {
+        this.user = user;
+    }
 
-	public void reservedBy(User user) {
-		this.user = user;
-	}
+    public void confirmedBy(User user) {
+        this.user = user;
+    }
 
-	public void confirmedBy(User user) {
-		this.user = user;
-	}
+    public void reserve() {
+        this.reserved = true;
+    }
 
-	public boolean isConfirmed() {
-		return confirmed;
-	}
+    public void confirm() {
+        this.confirmed = true;
+    }
 
-	public void reserve() {
-		this.reserved = true;
-	}
-
-	public void confirm() {
-		this.confirmed = true;
-	}
-
-	public void reservedUntil(LocalDateTime time) {
-		this.reservedUntil = time;
-	}
+    public void reservedUntil(LocalDateTime time) {
+        this.reservedUntil = time;
+    }
 }

@@ -1,25 +1,12 @@
 package data.entities;
 
+import data.services.DataException;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import data.services.DataException;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "ClientUser")
@@ -29,92 +16,89 @@ import lombok.Setter;
 @EqualsAndHashCode(of = {"userName"})
 public class User {
 
-	public static final String INVALID_USERNAME = "A valid username must be provided";
-	public static final String POINTS_MUST_BE_GREATER_THAN_ZERO = "Points must be greater than zero";
+    public static final String INVALID_USERNAME = "A valid username must be provided";
+    public static final String POINTS_MUST_BE_GREATER_THAN_ZERO = "Points must be greater than zero";
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private long id;
-	@Column(unique = true)
-	private String userName;
-	@OneToOne(cascade = CascadeType.PERSIST)
-	private Person person;
-	// password must not escape by any means out of this object
-	@Embedded
-	private Password password;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
+    @Column(unique = true)
+    private String userName;
+    @OneToOne(cascade = CascadeType.PERSIST)
+    private Person person;
+    // password must not escape by any means out of this object
+    @Embedded
+    private Password password;
+    @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "purchaser")
+    private List<Sale> purchases;
+    private int points;
 
-	@OneToMany(cascade = CascadeType.PERSIST, mappedBy = "purchaser")
-	private List<Sale> purchases;
+    public User(Person person, String userName, String password) {
+        this.person = person;
+        this.userName = new NotBlankString(userName,
+                INVALID_USERNAME).value();
+        this.password = new Password(password);
+        this.points = 0;
+        this.purchases = new ArrayList<>();
+    }
 
-	private int points;
+    public boolean hasPassword(String password) {
+        return this.password.equals(new Password(password));
+    }
 
-	public User(Person person, String userName, String password,
-			String repeatPassword) {
-		this.person = person;
-		this.userName = new NotBlankString(userName,
-				INVALID_USERNAME).value();
-		this.password = new Password(password);
-		this.points = 0;
-		this.purchases = new ArrayList<>();
-	}
+    public void setNewPassword(String newPassword) {
+        this.password = new Password(newPassword);
+    }
 
-	public boolean hasPassword(String password) {
-		return this.password.equals(new Password(password));
-	}
+    public void newEarnedPoints(int points) {
+        if (points <= 0) {
+            throw new DataException(POINTS_MUST_BE_GREATER_THAN_ZERO);
+        }
+        this.points += points;
+    }
 
-	public void setNewPassword(String newPassword) {
-		this.password = new Password(newPassword);
-	}
+    public boolean hasPoints(int points) {
+        return this.points == points;
+    }
 
-	public void newEarnedPoints(int points) {
-		if (points <= 0) {
-			throw new DataException(POINTS_MUST_BE_GREATER_THAN_ZERO);
-		}
-		this.points += points;
-	}
+    public String userName() {
+        return userName;
+    }
 
-	public boolean hasPoints(int points) {
-		return this.points == points;
-	}
+    public boolean hasName(String aName) {
+        return this.person.hasName(aName);
+    }
 
-	public String userName() {
-		return userName;
-	}
+    public boolean hasSurname(String aSurname) {
+        return this.person.aSurname(aSurname);
+    }
 
-	public boolean hasName(String aName) {
-		return this.person.hasName(aName);
-	}
+    public boolean hasUsername(String aUserName) {
+        return this.userName.equals(aUserName);
+    }
 
-	public boolean hasSurname(String aSurname) {
-		return this.person.aSurname(aSurname);
-	}
+    void newPurchase(Sale sale, int pointsWon) {
+        this.newEarnedPoints(pointsWon);
+        this.purchases.add(sale);
+    }
 
-	public boolean hasUsername(String aUserName) {
-		return this.userName.equals(aUserName);
-	}
+    public String email() {
+        return this.person.email();
+    }
 
-	void newPurchase(Sale sale, int pointsWon) {
-		this.newEarnedPoints(pointsWon);
-		this.purchases.add(sale);
-	}
+    public Map<String, Object> toMap() {
+        return Map.of("id", this.id);
+    }
 
-	public String email() {
-		return this.person.email();
-	}
+    public Long id() {
+        return id;
+    }
 
-	public Map<String, Object> toMap() {
-		return Map.of("id", this.id);
-	}
+    public String fullName() {
+        return this.person.fullName();
+    }
 
-	public Long id() {
-		return id;
-	}
-
-	public String fullName() {
-		return this.person.fullName();
-	}
-
-	public int points() {
-		return this.points;
-	}
+    public int points() {
+        return this.points;
+    }
 }

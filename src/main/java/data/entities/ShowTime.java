@@ -1,24 +1,15 @@
 package data.entities;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Set;
-
 import data.services.DataException;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,101 +17,93 @@ import lombok.Setter;
 @Getter(value = AccessLevel.PRIVATE)
 public class ShowTime {
 
-	public static final String PRICE_MUST_BE_POSITIVE = "The price must be greater than zero";
-	public static final int DEFAULT_TOTAL_POINTS_FOR_A_PURCHASE = 10;
-	public static final String SHOW_START_TIME_MUST_BE_AFTER_MOVIE_RELEASE_DATE = "Show start time must be before movie release date";
+    public static final String PRICE_MUST_BE_POSITIVE = "The price must be greater than zero";
+    public static final int DEFAULT_TOTAL_POINTS_FOR_A_PURCHASE = 10;
+    public static final String SHOW_START_TIME_MUST_BE_AFTER_MOVIE_RELEASE_DATE = "Show start time must be before movie release date";
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private long id;
-	private LocalDateTime startTime;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
+    private LocalDateTime startTime;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "id_movie")
-	private Movie movieToBeScreened;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_movie")
+    private Movie movieToBeScreened;
+    private float price;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Theater screenedIn;
+    @OneToMany(mappedBy = "show", cascade = CascadeType.PERSIST)
+    private Set<ShowSeat> seatsForThisShow;
+    @Column(name = "pointsToWin")
+    private int pointsThatAUserWin;
 
-	private float price;
+    public ShowTime(Movie movie,
+                    LocalDateTime startTime, float price, Theater screenedIn) {
+        this(movie, startTime, price, screenedIn,
+                DEFAULT_TOTAL_POINTS_FOR_A_PURCHASE);
+    }
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	private Theater screenedIn;
+    public ShowTime(Movie movie,
+                    LocalDateTime startTime, float price, Theater screenedIn,
+                    int totalPointsToWin) {
+        this.movieToBeScreened = movie;
+        checkPriceIsPositiveAndNotFree(price);
+        checkShowStartDateIsGreateThanReleaseDate(startTime, movie);
+        this.price = price;
+        this.startTime = startTime;
+        this.screenedIn = screenedIn;
+        this.seatsForThisShow = screenedIn.seatsForShow(this);
+        this.pointsThatAUserWin = totalPointsToWin;
+    }
 
-	@OneToMany(mappedBy = "show", cascade = CascadeType.PERSIST)
-	private Set<ShowSeat> seatsForThisShow;
+    private void checkShowStartDateIsGreateThanReleaseDate(
+            LocalDateTime startTime, Movie movie) {
+        if (startTime.isBefore(movie.releaseDateAsDateTime())) {
+            throw new DataException(
+                    SHOW_START_TIME_MUST_BE_AFTER_MOVIE_RELEASE_DATE);
+        }
+    }
+	
+    public int pointsToEarn() {
+        return this.pointsThatAUserWin;
+    }
 
-	@Column(name = "pointsToWin")
-	private int pointsThatAUserWin;
+    private void checkPriceIsPositiveAndNotFree(float price) {
+        if (price <= 0) {
+            throw new DataException(PRICE_MUST_BE_POSITIVE);
+        }
+    }
 
-	public ShowTime(Movie movie,
-			LocalDateTime startTime, float price, Theater screenedIn) {
-		this(movie, startTime, price, screenedIn,
-				DEFAULT_TOTAL_POINTS_FOR_A_PURCHASE);
-	}
+    public boolean hasSeatNumbered(int aSeatNumber) {
+        return this.seatsForThisShow.stream()
+                .anyMatch(seat -> seat.isSeatNumbered(aSeatNumber));
+    }
 
-	public ShowTime(Movie movie,
-			LocalDateTime startTime, float price, Theater screenedIn,
-			int totalPointsToWin) {
-		this.movieToBeScreened = movie;
-		checkPriceIsPositiveAndNotFree(price);
-		checkShowStartDateIsGreateThanReleaseDate(startTime, movie);
-		this.price = price;
-		this.startTime = startTime;
-		this.screenedIn = screenedIn;
-		this.seatsForThisShow = screenedIn.seatsForShow(this);
-		this.pointsThatAUserWin = totalPointsToWin;
-	}
+    public String movieName() {
+        return this.movieToBeScreened.name();
+    }
 
-	private void checkShowStartDateIsGreateThanReleaseDate(
-			LocalDateTime startTime, Movie movie) {
-		if (startTime.isBefore(movie.releaseDateAsDateTime())) {
-			throw new DataException(
-					SHOW_START_TIME_MUST_BE_AFTER_MOVIE_RELEASE_DATE);
-		}
-	}
+    public LocalDateTime startDateTime() {
+        return this.startTime;
+    }
 
-	public boolean isStartingAt(LocalDateTime of) {
-		return this.startTime.equals(startTime);
-	}
+    public Long id() {
+        return id;
+    }
 
-	public int pointsToEarn() {
-		return this.pointsThatAUserWin;
-	}
+    public float price() {
+        return price;
+    }
 
-	private void checkPriceIsPositiveAndNotFree(float price) {
-		if (price <= 0) {
-			throw new DataException(PRICE_MUST_BE_POSITIVE);
-		}
-	}
+    public int movieDuration() {
+        return this.movieToBeScreened.duration();
+    }
 
-	public boolean hasSeatNumbered(int aSeatNumber) {
-		return this.seatsForThisShow.stream()
-				.anyMatch(seat -> seat.isSeatNumbered(aSeatNumber));
-	}
+    public String screenedIn() {
+        return this.screenedIn.name();
+    }
 
-	public String movieName() {
-		return this.movieToBeScreened.name();
-	}
-
-	public LocalDateTime startDateTime() {
-		return this.startTime;
-	}
-
-	public Long id() {
-		return id;
-	}
-
-	public float price() {
-		return price;
-	}
-
-	public int movieDuration() {
-		return this.movieToBeScreened.duration();
-	}
-
-	public String screenedIn() {
-		return this.screenedIn.name();
-	}
-
-	public Set<ShowSeat> seatsForThisShow() {
-		return Collections.unmodifiableSet(this.seatsForThisShow);
-	}
+    public Set<ShowSeat> seatsForThisShow() {
+        return Collections.unmodifiableSet(this.seatsForThisShow);
+    }
 }
