@@ -27,8 +27,7 @@ public class User {
     @OneToOne(cascade = CascadeType.PERSIST)
     private Person person;
     // password must not escape by any means out of this object
-    @Embedded
-    private Password password;
+    private String password;
     @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "purchaser")
     private List<Sale> purchases;
     private int points;
@@ -37,17 +36,17 @@ public class User {
         this.person = person;
         this.userName = new NotBlankString(userName,
                 INVALID_USERNAME).value();
-        this.password = new Password(password);
+        this.password = password;
         this.points = 0;
         this.purchases = new ArrayList<>();
     }
 
     public boolean hasPassword(String password) {
-        return this.password.equals(new Password(password));
+        return this.password.equals(password);
     }
 
     public void setNewPassword(String newPassword) {
-        this.password = new Password(newPassword);
+        this.password = newPassword;
     }
 
     public void newEarnedPoints(int points) {

@@ -1,4 +1,4 @@
-package services.payment;
+package services;
 
 import services.api.CreditCardPaymentProvider;
 

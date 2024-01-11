@@ -1,4 +1,4 @@
-package services.token;
+package services;
 
 import dev.paseto.jpaseto.lang.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +36,10 @@ public class TokenTest {
                 encodedKey,
                 60 * 1000);
         var stringToken = token.tokenFrom(Map.of("id", 1L));
-
         var e = assertThrows(AuthException.class, () -> {
             token.verifyAndGetUserIdFrom(stringToken);
             fail("I have obtained the user id from an expired token");
         });
-
         assertEquals(PasetoToken.INVALID_TOKEN, e.getMessage());
     }
 }

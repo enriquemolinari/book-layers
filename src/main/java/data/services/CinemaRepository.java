@@ -21,7 +21,7 @@ public class CinemaRepository {
     public User login(String username, String password,
                       LocalDateTime loginTime) {
         var q = this.em.createQuery(
-                "select u from User u where u.userName = ?1 and u.password.password = ?2",
+                "select u from User u where u.userName = ?1 and u.password = ?2",
                 User.class);
         q.setParameter(1, username);
         q.setParameter(2, password);

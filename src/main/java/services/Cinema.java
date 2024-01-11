@@ -38,6 +38,7 @@ public class Cinema implements CinemaSystem {
     static final String USER_ID_NOT_EXISTS = "User not registered";
     static final String THEATER_ID_DOES_NOT_EXISTS = "Theater id not found";
     static final String MOVIE_ID_DOES_NOT_EXISTS = "Movie ID not found";
+    public static final String NOT_VALID_PASSWORD = "Password is not valid";
     private final EntityManagerFactory emf;
     private final CreditCardPaymentProvider paymentGateway;
     private final EmailProvider emailProvider;
@@ -302,12 +303,13 @@ public class Cinema implements CinemaSystem {
     public Long registerUser(String name, String surname, String email,
                              String userName,
                              String password, String repeatPassword) {
+        checkPasswordsMatch(password, repeatPassword);
+        checkPasswordLength(password);
         return inTxWithRetriesOnConflict((em) -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             if (dataRepository.doesUserExist(userName)) {
                 throw new BusinessException(USER_NAME_ALREADY_EXISTS);
             }
-            checkPasswordsMatch(password, repeatPassword);
             var user = new User(new Person(name, surname, email), userName,
                     password);
             dataRepository.save(user);
@@ -542,6 +544,8 @@ public class Cinema implements CinemaSystem {
     @Override
     public void changePassword(Long userId, String currentPassword,
                                String newPassword1, String newPassword2) {
+        checkPasswordsMatch(newPassword2, newPassword1);
+        checkPasswordLength(newPassword1);
         inTx(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var user = dataRepository.userBy(userId).
@@ -549,7 +553,6 @@ public class Cinema implements CinemaSystem {
             if (!user.hasPassword(currentPassword)) {
                 throw new BusinessException(CAN_NOT_CHANGE_PASSWORD);
             }
-            checkPasswordsMatch(newPassword2, newPassword1);
             user.setNewPassword(newPassword1);
             // just to conform the compiler
             return null;
@@ -557,7 +560,9 @@ public class Cinema implements CinemaSystem {
     }
 
     private void checkPasswordLength(String password) {
-        
+        if (password.length() < 12) {
+            throw new BusinessException(NOT_VALID_PASSWORD);
+        }
     }
 
     private void checkPasswordsMatch(String password, String repeatPassword) {

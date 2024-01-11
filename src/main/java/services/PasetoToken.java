@@ -1,4 +1,4 @@
-package services.token;
+package services;
 
 import dev.paseto.jpaseto.Paseto;
 import dev.paseto.jpaseto.Pasetos;

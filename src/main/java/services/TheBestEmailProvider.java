@@ -1,4 +1,4 @@
-package services.mail;
+package services;
 
 import services.api.EmailProvider;
 

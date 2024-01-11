@@ -1,7 +1,6 @@
 package services;
 
 import data.entities.Email;
-import data.entities.Password;
 import data.entities.Person;
 import data.entities.User;
 import data.services.DataException;
@@ -22,10 +21,9 @@ public class UserTest {
     }
 
     private User createUserEnrique() {
-        var u = new User(
+        return new User(
                 new Person("Enrique", "Molinari", "enrique.molinari@gmail.com"),
                 "enriquemolinari", "Ab138RtoUjkL");
-        return u;
     }
 
     @Test
@@ -36,8 +34,7 @@ public class UserTest {
                             "enrique.molinari@gmail.com"),
                     null, "Ab138RtoUjkL");
         });
-
-        assertTrue(e.getMessage().equals(User.INVALID_USERNAME));
+        assertEquals(User.INVALID_USERNAME, e.getMessage());
     }
 
     @Test
@@ -48,8 +45,7 @@ public class UserTest {
                             "enrique.molinari@gmail.com"),
                     "", "Ab138RtoUjkL");
         });
-
-        assertTrue(e.getMessage().equals(User.INVALID_USERNAME));
+        assertEquals(User.INVALID_USERNAME, e.getMessage());
     }
 
     @Test
@@ -60,19 +56,7 @@ public class UserTest {
                             "enrique.molinarigmail.com"),
                     "emolinari", "Ab138RtoUjkL");
         });
-
-        assertTrue(e.getMessage().equals(Email.NOT_VALID_EMAIL));
-    }
-
-    @Test
-    public void userPasswordIsInvalid() {
-        Exception e = assertThrows(DataException.class, () -> {
-            new User(
-                    new Person("Enrique", "Molinari",
-                            "enrique.molinari@gmail.com"),
-                    "emolinari", "abcAdif");
-        });
-        assertEquals(Password.NOT_VALID_PASSWORD, e.getMessage());
+        assertEquals(Email.NOT_VALID_EMAIL, e.getMessage());
     }
 
     @Test

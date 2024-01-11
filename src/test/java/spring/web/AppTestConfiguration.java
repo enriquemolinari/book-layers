@@ -1,4 +1,4 @@
-package spring.main;
+package spring.web;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,27 +7,32 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import services.Cinema;
 import services.PasetoToken;
-import services.PleasePayPaymentProvider;
-import services.TheBestEmailProvider;
 import services.api.CinemaSystem;
+import spring.main.SetUpDb;
+
+import java.time.YearMonth;
 
 @Configuration
-public class AppConfiguration {
+public class AppTestConfiguration {
+
     @Autowired
     private EntityManagerFactory entityManagerFactory;
-    // this secret should not be here
-    private static final String SECRET = "nXXh3Xjr2T0ofFilg3kw8BwDEyHmS6OIe4cjWUm2Sm0=";
 
     @Bean
-    @Profile("default")
-    public CinemaSystem create() {
+    @Profile("test")
+    public CinemaSystem createForTest() {
+        String ANY_SECRET = "Kdj5zuBIBBgcWpv9zjKOINl2yUKUXVKO+SkOVE3VuZ4=";
         new SetUpDb(entityManagerFactory)
                 .createSchemaAndPopulateSampleData();
-        return new Cinema(entityManagerFactory, new PleasePayPaymentProvider(),
-                new TheBestEmailProvider(),
-                new PasetoToken(SECRET), 10 /*
+        return new Cinema(entityManagerFactory,
+                (String creditCardNumber, YearMonth expire, String securityCode,
+                 float totalAmount) -> {
+                },
+                (String to, String subject, String body) -> {
+                },
+                new PasetoToken(ANY_SECRET),
+                2 /*
          * page size
          */);
     }
-
 }

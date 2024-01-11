@@ -1,8 +1,6 @@
 package services;
 
-import data.entities.Password;
 import data.services.CinemaRepository;
-import data.services.DataException;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.AfterEach;
@@ -47,16 +45,13 @@ public class CinemaTest {
     public void showStartTimeMustBeInTheFuture() {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
-
         var movieInfo = tests.createSuperMovie(cinema);
         long theaterId = createATheater(cinema);
-
         var e = assertThrows(BusinessException.class, () -> {
             cinema.addNewShowFor(movieInfo.id(),
                     LocalDateTime.now().minusDays(1),
                     10f, theaterId, 20);
         });
-
         assertEquals(Cinema.START_TIME_MUST_BE_IN_THE_FUTURE, e.getMessage());
     }
 
@@ -90,23 +85,16 @@ public class CinemaTest {
     public void reserveSeats() {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
-
         var movieInfo = tests.createSuperMovie(cinema);
-
         long theaterId = createATheater(cinema);
-
         var showInfo = cinema.addNewShowFor(movieInfo.id(),
                 LocalDateTime.of(LocalDate.now().plusYears(1).getYear(), 10, 10,
                         13, 30),
                 10f, theaterId, 20);
-
         var userId = registerAUser(cinema);
-
         var info = cinema.reserve(userId, showInfo.showId(), Set.of(1, 5));
-
         assertTrue(cinema.allSeatsReservedBy(userId, showInfo.showId(),
                 Set.of(1, 5)));
-
         assertTrue(info.currentSeats().contains(new Seat(1, false)));
         assertTrue(info.currentSeats().contains(new Seat(2, true)));
         assertTrue(info.currentSeats().contains(new Seat(3, true)));
@@ -215,26 +203,20 @@ public class CinemaTest {
                 () -> LocalDateTime.now().minusMonths(1),
                 tests.doNothingToken(),
                 10);
-
         var movieInfo = tests.createSuperMovie(cinema);
         long theaterId = createATheater(cinema);
-
         var showInfo = cinema.addNewShowFor(movieInfo.id(),
                 LocalDateTime.of(LocalDate.now().plusYears(1).getYear(), 10, 10,
                         13, 30),
                 10f, theaterId, 20);
-
         var userId = registerUserJose(cinema);
-
         cinema.reserve(userId, showInfo.showId(), Set.of(1, 5));
-
         var e = assertThrows(BusinessException.class, () -> {
             cinema.pay(userId, showInfo.showId(), Set.of(1, 5),
                     JOSEUSER_CREDIT_CARD_NUMBER,
                     JOSEUSER_CREDIT_CARD_EXPIRITY,
                     JOSEUSER_CREDIT_CARD_SEC_CODE);
         });
-
         assertEquals("Reservation is required before confirm", e.getMessage());
     }
 
@@ -242,25 +224,19 @@ public class CinemaTest {
     public void reserveAlreadReservedSeats() {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
-
         var movieInfo = tests.createSuperMovie(cinema);
         long theaterId = createATheater(cinema);
-
         var showInfo = cinema.addNewShowFor(movieInfo.id(),
                 LocalDateTime.of(LocalDate.now().plusYears(1).getYear(), 10, 10,
                         13, 30),
                 10f, theaterId, 20);
-
         var userId = registerAUser(cinema);
         var joseId = registerUserJose(cinema);
-
         cinema.reserve(userId, showInfo.showId(), Set.of(1, 5));
-
         var e = assertThrows(BusinessException.class, () -> {
             cinema.reserve(joseId, showInfo.showId(), Set.of(1, 4, 3));
             fail("I have reserved an already reserved seat");
         });
-
         assertEquals(Cinema.SELECTED_SEATS_ARE_BUSY, e.getMessage());
     }
 
@@ -269,9 +245,7 @@ public class CinemaTest {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
         registerUserJose(cinema);
-
         var token = cinema.login(JOSEUSER_USERNAME, JOSEUSER_PASS);
-
         assertEquals("aToken", token);
     }
 
@@ -280,12 +254,10 @@ public class CinemaTest {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
         registerUserJose(cinema);
-
         var e = assertThrows(AuthException.class, () -> {
             cinema.login(JOSEUSER_USERNAME, "wrongPassword");
             fail("A user has logged in with a wrong password");
         });
-
         assertEquals(CinemaRepository.USER_OR_PASSWORD_ERROR, e.getMessage());
     }
 
@@ -294,13 +266,11 @@ public class CinemaTest {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
         var userId = registerUserJose(cinema);
-
         var e = assertThrows(BusinessException.class, () -> {
             cinema.changePassword(userId, JOSEUSER_PASS + "toMakeItDifferent",
                     "password1234567",
                     "password1234567");
         });
-
         assertEquals(Cinema.CAN_NOT_CHANGE_PASSWORD, e.getMessage());
     }
 
@@ -309,12 +279,10 @@ public class CinemaTest {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
         var userId = registerUserJose(cinema);
-
         var e = assertThrows(BusinessException.class, () -> {
             cinema.changePassword(userId, JOSEUSER_PASS, "1234567password",
                     "password1234567");
         });
-
         assertEquals(Cinema.PASSWORDS_MUST_BE_EQUALS, e.getMessage());
     }
 
@@ -323,14 +291,11 @@ public class CinemaTest {
         var cinema = new Cinema(emf, tests.doNothingPaymentProvider(),
                 tests.doNothingEmailProvider(), tests.doNothingToken());
         var userId = registerUserJose(cinema);
-
-        var e = assertThrows(DataException.class, () -> {
+        var e = assertThrows(BusinessException.class, () -> {
             cinema.changePassword(userId, JOSEUSER_PASS, "12345",
                     "12345");
         });
-
-        assertEquals(Password.NOT_VALID_PASSWORD, e.getMessage());
-
+        assertEquals(Cinema.NOT_VALID_PASSWORD, e.getMessage());
     }
 
     @Test
