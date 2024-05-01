@@ -15,7 +15,7 @@ import services.api.CinemaSystem;
 public class AppConfiguration {
     @Autowired
     private EntityManagerFactory entityManagerFactory;
-    // this secret should not be here
+    // this secret should not be here (in source code)
     private static final String SECRET = "nXXh3Xjr2T0ofFilg3kw8BwDEyHmS6OIe4cjWUm2Sm0=";
 
     @Bean

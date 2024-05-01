@@ -38,7 +38,7 @@ public class CinemaTest {
 
     @BeforeEach
     public void setUp() {
-        emf = Persistence.createEntityManagerFactory("test-derby-cinema");
+        emf = Persistence.createEntityManagerFactory("derby-inmemory-cinema");
     }
 
     @Test

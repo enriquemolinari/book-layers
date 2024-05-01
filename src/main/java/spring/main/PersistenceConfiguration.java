@@ -11,14 +11,14 @@ import org.springframework.orm.jpa.LocalEntityManagerFactoryBean;
 @Configuration
 public class PersistenceConfiguration {
 
-    private static final String PROD_PERSISTENCE_UNIT = "derby-cinema";
-    private static final String TEST_PERSISTENCE_UNIT = "test-derby-cinema";
+    private static final String DERBY_CLIENT_PERSISTENCE_UNIT = "derby-client-cinema";
+    private static final String DERBY_EMBEDDED_PERSISTENCE_UNIT = "derby-inmemory-cinema";
 
     @Bean(name = "entityManagerFactory")
     @Profile("default")
     public LocalEntityManagerFactoryBean createEntityManagerFactory() {
         LocalEntityManagerFactoryBean factory = new LocalEntityManagerFactoryBean();
-        factory.setPersistenceUnitName(PROD_PERSISTENCE_UNIT);
+        factory.setPersistenceUnitName(DERBY_EMBEDDED_PERSISTENCE_UNIT);
         return factory;
     }
 }
