@@ -1,4 +1,4 @@
-package data.services;
+package data.repository;
 
 public class DataException extends RuntimeException {
     public DataException(String msg, Exception e) {

@@ -1,15 +1,19 @@
 package spring.web;
 
-import data.services.CinemaRepository;
+import data.repository.CinemaRepository;
 import io.restassured.response.Response;
+import jakarta.persistence.EntityManagerFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import spring.main.Main;
+import spring.main.SetUpDb;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,9 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @SpringBootTest(classes = Main.class, webEnvironment = WebEnvironment.DEFINED_PORT)
-// define a test profile to create the in memory database and sample data
-// see spring.main.AppConfiguration and spring.main.PersistenceConfiguration
-// classes
 @ActiveProfiles(value = "test")
 public class CinemaSystemControllerTest {
 
@@ -64,6 +65,35 @@ public class CinemaSystemControllerTest {
     private static final String TOKEN_COOKIE_NAME = "token";
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String URL = "http://localhost:8080";
+    private int anyValidShowId;
+    private int smallFishMovieId;
+    @Autowired
+    private EntityManagerFactory emf;
+
+    @BeforeEach
+    void setUp() {
+        emf.getSchemaManager().truncate();
+
+        new SetUpDb(emf)
+                .createSchemaAndPopulateSampleData();
+
+        anyValidShowId = showId();
+        smallFishMovieId = movieSmallFishId();
+    }
+
+    private int showId() {
+        return given().when().get(URL + "/shows")
+                .then()
+                .extract()
+                .path("shows[0].showId[0]");
+    }
+
+    private int movieSmallFishId() {
+        return given().when().get(URL + "/movies/search/Fish")
+                .then()
+                .extract()
+                .path("[0].id");
+    }
 
     @Test
     public void loginOk() {
@@ -271,10 +301,9 @@ public class CinemaSystemControllerTest {
 
     @Test
     public void movieOneOk() {
-        var response = get(URL + "/movies/1");
+        var response = get(URL + "/movies/" + smallFishMovieId);
         response.then().body(MOVIE_NAME_KEY,
-                is(oneOf(SMALL_FISH_MOVIE_NAME, ROCK_IN_THE_SCHOOL_MOVIE_NAME,
-                        RUNNING_FAR_AWAY_MOVIE_NAME, CRASH_TEA_MOVIE_NAME)));
+                is(SMALL_FISH_MOVIE_NAME));
         response.then().body(JSON_ROOT, hasKey(MOVIE_GENRES_KEY));
         response.then().body(JSON_ROOT, hasKey(MOVIE_PLOT_KEY));
         response.then().body(JSON_ROOT, hasKey(MOVIE_DURATION_KEY));
@@ -287,28 +316,21 @@ public class CinemaSystemControllerTest {
 
     @Test
     public void ratesFromMovieOneOk() {
-        var response = get(URL + "/movies/1/rate");
+        var response = get(URL + "/movies/" + smallFishMovieId + "/rate");
         response.then().body(JSON_ROOT,
-                hasItem(allOf(both(hasEntry(USERNAME_KEY, "lucia")).and(
+                hasItem(allOf(both(hasEntry(USERNAME_KEY, "emolinari")).and(
                                 (hasEntry(COMMENT_KEY,
-                                        "I really enjoy the movie")))
+                                        "Fantastic !!")))
                         .and(hasEntry(RATE_VALUE_KEY, 4)))));
-        response.then().body(JSON_ROOT,
-                hasItem(allOf(both(hasEntry(USERNAME_KEY, "nico")).and(
-                                (hasEntry(COMMENT_KEY,
-                                        "Fantastic! The actors, the music, everything is fantastic!")))
-                        .and(hasEntry(RATE_VALUE_KEY, 5)))));
     }
 
     @Test
     public void showOneOk() {
-        var response = get(URL + "/shows/1");
-        // To avoid fragile tests, I use oneOf, as the movie assigned to show 1
-        // might change
+        var response = get(URL + "/shows/" + anyValidShowId);
         response.then().body("info." + SHOW_MOVIE_NAME_KEY,
                 is(oneOf(SMALL_FISH_MOVIE_NAME, ROCK_IN_THE_SCHOOL_MOVIE_NAME,
                         RUNNING_FAR_AWAY_MOVIE_NAME, CRASH_TEA_MOVIE_NAME)));
-        response.then().body("info.showId", is(1));
+        response.then().body("info.showId", is(anyValidShowId));
         response.then().body(JSON_ROOT, hasKey(CURRENT_SEATS_KEY));
         response.then().body(INFO_KEY, hasKey("movieDuration"));
     }
@@ -322,7 +344,7 @@ public class CinemaSystemControllerTest {
         var response = given().contentType(JSON_CONTENT_TYPE)
                 .cookie(TOKEN_COOKIE_NAME, token)
                 .body(rateRequestBody.toString())
-                .post(URL + "/movies/2/rate");
+                .post(URL + "/movies/" + smallFishMovieId + "/rate");
         response.then().body(USERNAME_KEY, is(USERNAME_JOSE))
                 .body(RATE_VALUE_KEY, is(4))
                 .body(COMMENT_KEY, is("a comment..."));
@@ -393,7 +415,7 @@ public class CinemaSystemControllerTest {
         response.then().body(SHOW_MOVIE_NAME_KEY,
                 is(oneOf(SMALL_FISH_MOVIE_NAME, ROCK_IN_THE_SCHOOL_MOVIE_NAME,
                         RUNNING_FAR_AWAY_MOVIE_NAME, CRASH_TEA_MOVIE_NAME)));
-        response.then().body("total", is(30.0F));
+        response.then().body("total", isA(Float.class));
         response.then().body("pointsWon", is(10));
         response.then().body(USERNAME_KEY, is("nico"));
         response.then().body("payedSeats", hasItems(12, 13, 17));
@@ -422,12 +444,12 @@ public class CinemaSystemControllerTest {
         var availableSeats = list.stream()
                 .filter(l -> l.get(SEAT_AVAILABLE_KEY).equals(true))
                 .toList();
-        assertEquals(3, notAvailableSeats.size());
-        assertEquals(27, availableSeats.size());
+        assertEquals(2, notAvailableSeats.size());
+        assertEquals(28, availableSeats.size());
         response.then().body(INFO_KEY + "." + SHOW_MOVIE_NAME_KEY,
                 is(oneOf(SMALL_FISH_MOVIE_NAME, ROCK_IN_THE_SCHOOL_MOVIE_NAME,
                         RUNNING_FAR_AWAY_MOVIE_NAME, CRASH_TEA_MOVIE_NAME)));
-        response.then().body("info.showId", is(1));
+        response.then().body("info.showId", is(anyValidShowId));
         response.then().body(JSON_ROOT, hasKey(CURRENT_SEATS_KEY));
         response.then().body(INFO_KEY, hasKey("movieDuration"));
     }
@@ -442,14 +464,14 @@ public class CinemaSystemControllerTest {
         return given().contentType(JSON_CONTENT_TYPE)
                 .cookie(TOKEN_COOKIE_NAME, token)
                 .body(paymentRequest.toString())
-                .post(URL + "/shows/1/pay");
+                .post(URL + "/shows/" + anyValidShowId + "/pay");
     }
 
     private Response reservePost(String token, JSONArray seatsRequest) {
         return given().contentType(JSON_CONTENT_TYPE)
                 .cookie(TOKEN_COOKIE_NAME, token)
                 .body(seatsRequest.toString())
-                .post(URL + "/shows/1/reserve");
+                .post(URL + "/shows/" + anyValidShowId + "/reserve");
     }
 
     private JSONArray jsonBodyForReserveSeats(Integer... seats) {

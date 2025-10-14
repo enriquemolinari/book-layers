@@ -4,7 +4,7 @@ import data.entities.Actor;
 import data.entities.Genre;
 import data.entities.Movie;
 import data.entities.Person;
-import data.services.DataException;
+import data.repository.DataException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

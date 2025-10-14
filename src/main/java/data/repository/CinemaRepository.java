@@ -1,4 +1,4 @@
-package data.services;
+package data.repository;
 
 import data.entities.*;
 import jakarta.persistence.EntityManager;

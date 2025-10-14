@@ -1,10 +1,9 @@
 package services;
 
-import data.services.CinemaRepository;
+import data.repository.CinemaRepository;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import services.api.AuthException;
 import services.api.BusinessException;
@@ -36,9 +35,14 @@ public class CinemaTest {
     private final ForTests tests = new ForTests();
     private static EntityManagerFactory emf;
 
-    @BeforeEach
-    public void setUp() {
-        emf = Persistence.createEntityManagerFactory("derby-inmemory-cinema");
+    @BeforeAll
+    public static void setUp() {
+        emf = new EmfBuilder().memory().withDropAndCreateDDL().build();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        emf.getSchemaManager().truncate();
     }
 
     @Test
@@ -583,9 +587,5 @@ public class CinemaTest {
                 Set.of(1, 2, 3, 4, 5, 6));
     }
 
-    @AfterEach
-    public void tearDown() {
-        emf.close();
-    }
 
 }

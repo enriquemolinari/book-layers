@@ -2,7 +2,7 @@ package services;
 
 import data.entities.ShowTime;
 import data.entities.Theater;
-import data.services.DataException;
+import data.repository.DataException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

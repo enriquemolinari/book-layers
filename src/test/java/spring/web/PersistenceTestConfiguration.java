@@ -1,19 +1,19 @@
 package spring.web;
 
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.orm.jpa.LocalEntityManagerFactoryBean;
+import services.EmfBuilder;
 
 @Configuration
 public class PersistenceTestConfiguration {
-    private static final String DERBY_EMBEDDED_PERSISTENCE_UNIT = "derby-inmemory-cinema";
-
-    @Bean(name = "entityManagerFactory")
+    @Bean
     @Profile("test")
-    public LocalEntityManagerFactoryBean createEntityManagerFactory() {
-        LocalEntityManagerFactoryBean factory = new LocalEntityManagerFactoryBean();
-        factory.setPersistenceUnitName(DERBY_EMBEDDED_PERSISTENCE_UNIT);
-        return factory;
+    public EntityManagerFactory createEmf() {
+        return new EmfBuilder()
+                .memory()
+                .withDropAndCreateDDL()
+                .build();
     }
 }

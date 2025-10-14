@@ -3,7 +3,7 @@ package services;
 import data.entities.Email;
 import data.entities.Person;
 import data.entities.User;
-import data.services.DataException;
+import data.repository.DataException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

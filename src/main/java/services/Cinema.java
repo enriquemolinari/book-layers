@@ -1,8 +1,8 @@
 package services;
 
 import data.entities.*;
-import data.services.CinemaRepository;
-import data.services.DataException;
+import data.repository.CinemaRepository;
+import data.repository.DataException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
@@ -76,7 +76,7 @@ public class Cinema implements CinemaSystem {
 
     @Override
     public List<MovieShows> showsUntil(LocalDateTime untilTo) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var movies = dataRepository.moviesWithShowsUntil(untilTo);
             return movies.stream()
@@ -96,7 +96,7 @@ public class Cinema implements CinemaSystem {
 
     @Override
     public MovieInfo movie(Long id) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var movie = new CinemaRepository(em, this.pageSize)
                     .movieBy(id);
             return convertMovieToMovieInfo(movie.orElseThrow(
@@ -107,7 +107,7 @@ public class Cinema implements CinemaSystem {
     @Override
     public MovieInfo addNewMovie(String name, int duration,
                                  LocalDate releaseDate, String plot, Set<String> genres) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var enumGenres = genres.stream().map(Genre::valueOf)
                     .collect(Collectors.toUnmodifiableSet());
@@ -121,7 +121,7 @@ public class Cinema implements CinemaSystem {
     @Override
     public MovieInfo addActorTo(Long movieId, String name, String surname,
                                 String email, String characterName) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var movie = movieBy(movieId, em);
             movie.addAnActor(name, surname, email, characterName);
             return convertMovieToMovieInfo(movie);
@@ -131,7 +131,7 @@ public class Cinema implements CinemaSystem {
     @Override
     public MovieInfo addDirectorToMovie(Long movieId, String name,
                                         String surname, String email) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var movie = movieBy(movieId, em);
             movie.addADirector(name, surname, email);
             return convertMovieToMovieInfo(movie);
@@ -146,7 +146,7 @@ public class Cinema implements CinemaSystem {
 
     @Override
     public Long addNewTheater(String name, Set<Integer> seatsNumbers) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var theater = new Theater(name, seatsNumbers);
             var dataRepository = new CinemaRepository(em, this.pageSize);
             dataRepository.save(theater);
@@ -157,26 +157,28 @@ public class Cinema implements CinemaSystem {
     @Override
     public ShowInfo addNewShowFor(Long movieId, LocalDateTime startTime,
                                   float price, Long theaterId, int pointsToWin) {
-        return inTx(em -> {
-            if (startTime.isBefore(this.dateTimeProvider.now())) {
-                throw new BusinessException(START_TIME_MUST_BE_IN_THE_FUTURE);
-            }
-            var dataRepository = new CinemaRepository(em, this.pageSize);
-            var movie = dataRepository.movieBy(movieId).
-                    orElseThrow(() -> new BusinessException(MOVIE_ID_DOES_NOT_EXISTS));
-            var theatre = dataRepository.theatreBy(theaterId).
-                    orElseThrow(() -> new BusinessException(THEATER_ID_DOES_NOT_EXISTS));
-            var showTime = new ShowTime(movie, startTime, price, theatre,
-                    pointsToWin);
-            dataRepository.save(showTime);
-            return convertShowTimeToShowInfo(showTime);
-        });
+        return emf.callInTransaction(
+                em -> {
+                    if (startTime.isBefore(this.dateTimeProvider.now())) {
+                        throw new BusinessException(START_TIME_MUST_BE_IN_THE_FUTURE);
+                    }
+                    var dataRepository = new CinemaRepository(em, this.pageSize);
+                    var movie = dataRepository.movieBy(movieId).
+                            orElseThrow(() -> new BusinessException(MOVIE_ID_DOES_NOT_EXISTS));
+                    var theatre = dataRepository.theatreBy(theaterId).
+                            orElseThrow(() -> new BusinessException(THEATER_ID_DOES_NOT_EXISTS));
+                    var showTime = new ShowTime(movie, startTime, price, theatre,
+                            pointsToWin);
+                    dataRepository.save(showTime);
+                    return convertShowTimeToShowInfo(showTime);
+                }
+        );
     }
 
     boolean allSeatsWithCondition(Long userId, Long showTimeId,
                                   Set<Integer> selectedSeats,
                                   BiFunction<ShowSeat, User, Boolean> condition) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             ShowTime showTime = dataRepository.showTimeBy(showTimeId).
                     orElseThrow(() -> new BusinessException(SHOW_TIME_ID_NOT_EXISTS));
@@ -190,18 +192,14 @@ public class Cinema implements CinemaSystem {
 
     boolean allSeatsReservedBy(Long userId, Long showTimeId,
                                Set<Integer> selectedSeats) {
-        return inTx(em -> {
-            return allSeatsWithCondition(userId, showTimeId, selectedSeats,
-                    ShowSeat::isReservedBy);
-        });
+        return allSeatsWithCondition(userId, showTimeId, selectedSeats,
+                ShowSeat::isReservedBy);
     }
 
     boolean allSeatsConfirmedBy(Long userId, Long showTimeId,
                                 Set<Integer> selectedSeats) {
-        return inTx(em -> {
-            return allSeatsWithCondition(userId, showTimeId, selectedSeats,
-                    ShowSeat::isConfirmedBy);
-        });
+        return allSeatsWithCondition(userId, showTimeId, selectedSeats,
+                ShowSeat::isConfirmedBy);
     }
 
     private boolean allMatchConditionFor(Set<ShowSeat> seatsToReserve,
@@ -212,7 +210,7 @@ public class Cinema implements CinemaSystem {
     @Override
     public DetailedShowInfo reserve(Long userId, Long showTimeId,
                                     Set<Integer> selectedSeats) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             ShowTime showTime = dataRepository.showTimeBy(showTimeId).
                     orElseThrow(() -> new BusinessException(SHOW_TIME_ID_NOT_EXISTS));
@@ -262,8 +260,7 @@ public class Cinema implements CinemaSystem {
     public Ticket pay(Long userId, Long showTimeId, Set<Integer> selectedSeats,
                       String creditCardNumber, YearMonth expirationDate,
                       String secturityCode) {
-
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var showTime = dataRepository.showTimeBy(showTimeId).
                     orElseThrow(() -> new BusinessException(SHOW_TIME_ID_NOT_EXISTS));
@@ -287,7 +284,7 @@ public class Cinema implements CinemaSystem {
 
     @Override
     public String login(String username, String password) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             try {
                 var user = new CinemaRepository(em, this.pageSize).login(
                         username, password,
@@ -399,7 +396,7 @@ public class Cinema implements CinemaSystem {
     public List<UserMovieRate> pagedRatesOfOrderedDate(Long movieId,
                                                        int pageNumber) {
         checkPageNumberIsGreaterThanZero(pageNumber);
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var usersRate = dataRepository.pagedUserRates(movieId, pageNumber);
 
@@ -414,7 +411,7 @@ public class Cinema implements CinemaSystem {
 
     @Override
     public DetailedShowInfo show(Long id) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var show = dataRepository.showTimeBy(id).
                     orElseThrow(() -> new BusinessException(SHOW_TIME_ID_NOT_EXISTS));
@@ -442,7 +439,7 @@ public class Cinema implements CinemaSystem {
     public List<MovieInfo> pagedSearchMovieByName(String fullOrPartmovieName,
                                                   int pageNumber) {
         checkPageNumberIsGreaterThanZero(pageNumber);
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var movies = dataRepository.pagedSearchMovieByName(
                     fullOrPartmovieName,
@@ -482,7 +479,7 @@ public class Cinema implements CinemaSystem {
     private List<MovieInfo> pagedMoviesSortedBy(int pageNumber,
                                                 String orderByClause) {
         checkPageNumberIsGreaterThanZero(pageNumber);
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var movies = dataRepository.pagedMoviesSortedBy(pageNumber,
                     orderByClause);
@@ -498,32 +495,13 @@ public class Cinema implements CinemaSystem {
                 "order by m.rating.totalUserVotes desc, m.rating.rateValue desc");
     }
 
-    private <T> T inTx(Function<EntityManager, T> toExecute) {
-        em = emf.createEntityManager();
-        var tx = em.getTransaction();
-
-        try {
-            tx.begin();
-
-            T t = toExecute.apply(em);
-            tx.commit();
-
-            return t;
-        } catch (Exception e) {
-            tx.rollback();
-            throw e;
-        } finally {
-            em.close();
-        }
-    }
-
     private <T> T inTxWithRetriesOnConflict(
             Function<EntityManager, T> toExecute) {
         int retries = 0;
 
         while (retries < Cinema.NUMBER_OF_RETRIES) {
             try {
-                return inTx(toExecute);
+                return emf.callInTransaction(toExecute);
                 // There is no a great way in JPA to detect a constraint
                 // violation. I use RollbackException and retries one more
                 // time for specific use cases
@@ -546,7 +524,7 @@ public class Cinema implements CinemaSystem {
                                String newPassword1, String newPassword2) {
         checkPasswordsMatch(newPassword2, newPassword1);
         checkPasswordLength(newPassword1);
-        inTx(em -> {
+        emf.runInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var user = dataRepository.userBy(userId).
                     orElseThrow(() -> new BusinessException(USER_ID_NOT_EXISTS));
@@ -554,8 +532,6 @@ public class Cinema implements CinemaSystem {
                 throw new BusinessException(CAN_NOT_CHANGE_PASSWORD);
             }
             user.setNewPassword(newPassword1);
-            // just to conform the compiler
-            return null;
         });
     }
 
@@ -573,7 +549,7 @@ public class Cinema implements CinemaSystem {
 
     @Override
     public UserProfile profileFrom(Long userId) {
-        return inTx(em -> {
+        return emf.callInTransaction(em -> {
             var dataRepository = new CinemaRepository(em, this.pageSize);
             var user = dataRepository.userBy(userId).
                     orElseThrow(() -> new BusinessException(USER_ID_NOT_EXISTS));

@@ -1,6 +1,6 @@
 package data.entities;
 
-import data.services.DataException;
+import data.repository.DataException;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.Getter;

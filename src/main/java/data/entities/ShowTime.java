@@ -1,6 +1,6 @@
 package data.entities;
 
-import data.services.DataException;
+import data.repository.DataException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -63,7 +63,7 @@ public class ShowTime {
                     SHOW_START_TIME_MUST_BE_AFTER_MOVIE_RELEASE_DATE);
         }
     }
-	
+
     public int pointsToEarn() {
         return this.pointsThatAUserWin;
     }
