@@ -1,7 +1,7 @@
 # Cinema Ticket System - Layered: Transaction Script Code Organization
 
-This repository contains the implementation of the Cinema Ticket System using a layered architecture with a transaction
-script approach for organizing business logic.
+This repository contains the implementation of the Cinema Ticket System using a layered architecture and a transaction
+script approach to organize the business logic.
 
 - `git clone https://github.com/enriquemolinari/book-layers`
 - `cd book-layers`
