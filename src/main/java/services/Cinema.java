@@ -113,7 +113,7 @@ public class Cinema implements CinemaSystem {
                     .collect(Collectors.toUnmodifiableSet());
             var movie = new Movie(name, plot, duration, releaseDate,
                     enumGenres);
-            dataRepository.save(movie);
+            dataRepository.add(movie);
             return convertMovieToMovieInfo(movie);
         });
     }
@@ -149,7 +149,7 @@ public class Cinema implements CinemaSystem {
         return emf.callInTransaction(em -> {
             var theater = new Theater(name, seatsNumbers);
             var dataRepository = new CinemaRepository(em, this.pageSize);
-            dataRepository.save(theater);
+            dataRepository.add(theater);
             return theater.id();
         });
     }
@@ -169,7 +169,7 @@ public class Cinema implements CinemaSystem {
                             orElseThrow(() -> new BusinessException(THEATER_ID_DOES_NOT_EXISTS));
                     var showTime = new ShowTime(movie, startTime, price, theatre,
                             pointsToWin);
-                    dataRepository.save(showTime);
+                    dataRepository.add(showTime);
                     return convertShowTimeToShowInfo(showTime);
                 }
         );
@@ -309,7 +309,7 @@ public class Cinema implements CinemaSystem {
             }
             var user = new User(new Person(name, surname, email), userName,
                     password);
-            dataRepository.save(user);
+            dataRepository.add(user);
             return user.id();
         });
     }

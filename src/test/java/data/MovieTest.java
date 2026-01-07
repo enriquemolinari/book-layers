@@ -1,4 +1,4 @@
-package services;
+package data;
 
 import data.entities.Actor;
 import data.entities.Genre;
@@ -6,6 +6,7 @@ import data.entities.Movie;
 import data.entities.Person;
 import data.repository.DataException;
 import org.junit.jupiter.api.Test;
+import services.ForTests;
 
 import java.time.LocalDate;
 import java.util.List;

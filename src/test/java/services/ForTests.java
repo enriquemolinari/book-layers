@@ -32,7 +32,7 @@ public class ForTests {
         return createSmallFishMovie(LocalDate.of(2023, 10, 10));
     }
 
-    Movie createSmallFishMovie(LocalDate releaseDate) {
+    public Movie createSmallFishMovie(LocalDate releaseDate) {
         return new Movie("Small Fish", "plot x", 102,
                 releaseDate,
                 Set.of(Genre.COMEDY, Genre.ACTION)/* genre */,
@@ -67,7 +67,7 @@ public class ForTests {
         };
     }
 
-    ShowTime createShowForSmallFish() {
+    public ShowTime createShowForSmallFish() {
         return new ShowTime(createSmallFishMovie(),
                 LocalDateTime.now().plusDays(1), 10f,
                 new Theater("a Theater", Set.of(1, 2, 3, 4, 5, 6)));

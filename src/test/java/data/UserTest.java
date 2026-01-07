@@ -1,4 +1,4 @@
-package services;
+package data;
 
 import data.entities.Email;
 import data.entities.Person;

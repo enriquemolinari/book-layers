@@ -52,8 +52,9 @@ public class CinemaRepository {
 
     public boolean doesUserExist(String userName) {
         var q = this.em.createQuery(
-                "select u from User u where u.userName = ?1 ", User.class);
+                "select u.id from User u where u.userName = ?1 ", Long.class);
         q.setParameter(1, userName);
+        q.setMaxResults(1);
         var mightBeAUser = q.getResultList();
         return (!mightBeAUser.isEmpty());
     }
@@ -121,7 +122,7 @@ public class CinemaRepository {
         return Optional.ofNullable(em.find(entity, id));
     }
 
-    public <T> void save(T entity) {
+    public <T> void add(T entity) {
         em.persist(entity);
     }
 }

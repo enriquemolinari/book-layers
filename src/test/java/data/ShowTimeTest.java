@@ -1,9 +1,10 @@
-package services;
+package data;
 
 import data.entities.ShowTime;
 import data.entities.Theater;
 import data.repository.DataException;
 import org.junit.jupiter.api.Test;
+import services.ForTests;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
